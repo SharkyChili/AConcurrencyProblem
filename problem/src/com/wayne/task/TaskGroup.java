@@ -5,6 +5,7 @@ import com.wayne.lock.YourLock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.locks.Lock;
 
 /**
@@ -16,8 +17,9 @@ public class TaskGroup implements Runnable{
     private int groupId;
     private YourLock lock = new YourLock();
     private Integer taskIds = 0x00000000;
+    private CountDownLatch latch;
 
-    public TaskGroup(int index, int size, List<Task> taskList){
+    public TaskGroup(int index, int size, List<Task> taskList, CountDownLatch latch){
         this.groupId = index;
         Random random = new Random();
         while(myTaskList.size()<size){
@@ -30,6 +32,17 @@ public class TaskGroup implements Runnable{
                 this.taskIds = tmp | mask;
             }
         }
+        this.latch = latch;
+    }
+
+    @Override
+    public void run() {
+        lock.lock(this.taskIds);
+        for (Task task : myTaskList) {
+            task.met(this);
+        }
+        lock.unlock(this.taskIds);
+        this.latch.countDown();
     }
 
     public int getGroupId() {
@@ -40,12 +53,7 @@ public class TaskGroup implements Runnable{
         this.groupId = groupId;
     }
 
-    @Override
-    public void run() {
-        lock.lock(this.taskIds);
-        for (Task task : myTaskList) {
-            task.met(this);
-        }
-        lock.unlock(this.taskIds);
+    public List<Task> getMyTaskList() {
+        return myTaskList;
     }
 }
