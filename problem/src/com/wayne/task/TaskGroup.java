@@ -24,14 +24,12 @@ public class TaskGroup implements Runnable{
             Task task = taskList.get(random.nextInt(taskList.size()));
             if(!myTaskList.contains(task)){
                 myTaskList.add(task);
-                int taskI = task.getI();
+                int taskId = task.getId();
                 Integer tmp = this.taskIds;
-                Integer mask = 0x00000001 << taskI;
+                Integer mask = 0x00000001 << taskId;
                 this.taskIds = tmp | mask;
             }
         }
-
-
     }
 
     public int getGroupId() {
