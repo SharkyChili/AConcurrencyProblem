@@ -15,6 +15,7 @@ public class TaskGroup implements Runnable{
     private List<Task> myTaskList = new ArrayList<>();
     private int groupId;
     private YourLock lock = new YourLock();
+    private Integer taskIds = 0x00000000;
 
     public TaskGroup(int index, int size, List<Task> taskList){
         this.groupId = index;
@@ -23,8 +24,14 @@ public class TaskGroup implements Runnable{
             Task task = taskList.get(random.nextInt(taskList.size()));
             if(!myTaskList.contains(task)){
                 myTaskList.add(task);
+                int taskI = task.getI();
+                Integer tmp = this.taskIds;
+                Integer mask = 0x00000001 << taskI;
+                this.taskIds = tmp | mask;
             }
         }
+
+
     }
 
     public int getGroupId() {
@@ -37,10 +44,10 @@ public class TaskGroup implements Runnable{
 
     @Override
     public void run() {
+        lock.lock(this.taskIds);
         for (Task task : myTaskList) {
-            lock.lock();
             task.met(this);
-            lock.unlock();
         }
+        lock.unlock(this.taskIds);
     }
 }
